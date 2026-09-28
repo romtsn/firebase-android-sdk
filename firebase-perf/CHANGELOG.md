@@ -1,6 +1,9 @@
 # Unreleased
 
-- [changed] Updated Protocol Buffers to 4.36.1. (#8580)
+- [changed] **Breaking Change**: Updated minSdkVersion to API level 24 or higher. (#8638)
+- [changed] **Breaking change:** Updated Protocol Buffers dependency to
+  `4.36.1`.
+  ([#8580](https://github.com/firebase/firebase-android-sdk/pull/8580))
 - [changed] Removed the unused dependency on `protolite-well-known-types`. (#8580)
 
 # 22.0.6
