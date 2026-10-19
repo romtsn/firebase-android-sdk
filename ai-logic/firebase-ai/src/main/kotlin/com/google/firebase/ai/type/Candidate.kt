@@ -14,9 +14,6 @@
  * limitations under the License.
  */
 
-// Added to silence a spurious warning in Android Studio
-@file:OptIn(InternalSerializationApi::class)
-
 package com.google.firebase.ai.type
 
 import com.google.firebase.ai.common.util.FirstOrdinalSerializer
@@ -24,7 +21,6 @@ import com.google.firebase.ai.ondevice.interop.Candidate as OnDeviceCandidate
 import com.google.firebase.ai.ondevice.interop.FinishReason as OnDeviceFinishReason
 import java.util.Calendar
 import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -88,13 +84,40 @@ internal constructor(
     }
   }
 
+  @OptIn(PublicPreviewAPI::class)
   internal companion object {
-    fun fromInterop(candidate: OnDeviceCandidate) =
+    fun fromInterop(candidate: OnDeviceCandidate, thoughts: List<OnDeviceCandidate> = emptyList()) =
       Candidate(
-        content = content { text(candidate.text) },
+        content =
+          content {
+            val nonEmptyThoughts = thoughts.filter { it.text.isNotEmpty() }
+            nonEmptyThoughts.forEach { thought ->
+              part(TextPart(text = thought.text, isThought = true, thoughtSignature = null))
+            }
+            if (candidate.text.isNotEmpty() || nonEmptyThoughts.isEmpty()) {
+              text(candidate.text)
+            }
+          },
         safetyRatings = emptyList(),
         citationMetadata = null,
         finishReason = FinishReason.fromInterop(candidate.finishReason),
+        finishMessage = null,
+        groundingMetadata = null,
+        urlContextMetadata = null
+      )
+
+    fun fromInteropThought(thoughts: List<OnDeviceCandidate>) =
+      Candidate(
+        content =
+          content {
+            val nonEmptyThoughts = thoughts.filter { it.text.isNotEmpty() }
+            nonEmptyThoughts.forEach { thought ->
+              part(TextPart(text = thought.text, isThought = true, thoughtSignature = null))
+            }
+          },
+        safetyRatings = emptyList(),
+        citationMetadata = null,
+        finishReason = thoughts.lastOrNull()?.let { FinishReason.fromInterop(it.finishReason) },
         finishMessage = null,
         groundingMetadata = null,
         urlContextMetadata = null
